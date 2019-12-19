@@ -11,7 +11,7 @@ import (
 )
 
 // Tar takes a source and variable writers and walks 'source' writing each file found to the tar writer;
-func TarFolder(src string, writer io.Writer) error {
+func TarFolder(src string, writer io.Writer, skips ...string) error {
 
 	// ensure the src actually exists before trying to tar it
 	if _, err := os.Stat(src); err != nil {
@@ -30,6 +30,15 @@ func TarFolder(src string, writer io.Writer) error {
 		// return on any error
 		if err != nil {
 			return err
+		}
+
+		// Skip directory or just file in skipList
+		if contains(skips, fi.Name()) {
+			if fi.IsDir() {
+				return filepath.SkipDir
+			} else {
+				return nil
+			}
 		}
 
 		// return on non-regular files (thanks to [kumo](https://medium.com/@komuw/just-like-you-did-fbdd7df829d3) for this suggested update)
@@ -68,4 +77,13 @@ func TarFolder(src string, writer io.Writer) error {
 
 		return nil
 	})
+}
+
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
 }

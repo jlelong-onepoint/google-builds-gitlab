@@ -126,7 +126,7 @@ func sourceToBucket(bucketName string, objectName string) (err error){
 		err = writer.Close()
 	}()
 
-	pkg.TarFolder(checkoutFolder, writer)
+	pkg.TarFolder(checkoutFolder, writer, ".git", ".gitignore")
 
 	return nil
 }

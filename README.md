@@ -105,7 +105,6 @@ curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id"
 - Add deploy output for serviceAccount name and needed informations for subsequent commands
 - Better error management
   - use panic for error ?? : cf https://github.com/GoogleCloudPlatform/golang-samples/blob/master/functions/tips/error.go ??
-- Don't tar .git folder
 - runtimeconfig.admin role only on the gitlabhook config object not at the project level
 - add authorization by deployment, not via command line
 - Move the region to runtimeconfig at deployment time and remove the env.yaml file
