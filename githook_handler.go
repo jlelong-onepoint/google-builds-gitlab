@@ -14,7 +14,6 @@ import (
 )
 
 
-
 const (
 	checkoutFolder = "/tmp/sources"
 	cloudBuildYaml = checkoutFolder + "/cloudbuild.yaml"
@@ -45,7 +44,9 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	deployToken, err := pkg.Decrypt(GetKeyName(), repositoryConfig.EncryptedDeployToken)
+	cypherService := pkg.NewCypherService(os.Getenv("GCP_PROJECT"), os.Getenv("REGION"), keyRingName, os.Getenv("DEPLOYMENT_NAME"))
+
+	deployToken, err := cypherService.Decrypt(repositoryConfig.EncryptedDeployToken)
 	if err != nil {
 		panic(err)
 	}
@@ -120,31 +121,4 @@ func sourceToBucket(bucketName string) (err error){
 	return nil
 }
 
-/*
-func getGitAccessKey() []byte {
-
-	ctx := context.Background()
-	client, err := cloudkms.NewKeyManagementClient(ctx)
-	CheckIfError("create kms service client", err)
-
-	accessKey, err := base64.StdEncoding.DecodeString(os.Getenv("GITLAB_ACCESS_TOKEN"))
-	CheckIfError("decode access token from env var", err)
-
-	// Build the request.
-	req := &kmspb.DecryptRequest{
-		Name:       "projects/wired-balm-258119/locations/europe-west1/keyRings/secrets/cryptoKeys/gitlab",
-		Ciphertext: accessKey,
-	}
-
-	// Call the API.
-	resp, err := client.Decrypt(ctx, req)
-	CheckIfError("decrypt access token", err)
-
-	return resp.Plaintext
-
-
-}
-
-
- */
 

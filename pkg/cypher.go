@@ -7,7 +7,18 @@ import (
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 
-func Encrypt(keyName string, value string) ([]byte, error) {
+type CypherService struct {
+	keyName string
+}
+
+func NewCypherService(projectId string, region string, keyRingName string, keyName string) CypherService {
+	keyNameTemplate := "projects/%v/locations/%v/keyRings/%v/cryptoKeys/%v"
+	fullKeyName := fmt.Sprintf(keyNameTemplate, projectId, region, keyRingName, keyName)
+	return CypherService{ keyName : fullKeyName }
+}
+
+
+func (service CypherService) Encrypt(value string) ([]byte, error) {
 	ctx := context.Background()
 
 	client, err := cloudkms.NewKeyManagementClient(ctx)
@@ -18,7 +29,7 @@ func Encrypt(keyName string, value string) ([]byte, error) {
 
 	// Build the encrypt request.
 	req := kmspb.EncryptRequest{
-		Name:      keyName,
+		Name:      service.keyName,
 		Plaintext: []byte(value),
 	}
 	// Call the API.
@@ -28,10 +39,9 @@ func Encrypt(keyName string, value string) ([]byte, error) {
 	}
 
 	return resp.Ciphertext, nil
-
 }
 
-func Decrypt(keyName string, value []byte) (*string, error) {
+func (service CypherService) Decrypt(value []byte) (*string, error) {
 	ctx := context.Background()
 	client, err := cloudkms.NewKeyManagementClient(ctx)
 	if err != nil {
@@ -42,7 +52,7 @@ func Decrypt(keyName string, value []byte) (*string, error) {
 
 	// Build the decrypt request.
 	req := kmspb.DecryptRequest{
-		Name: keyName,
+		Name: service.keyName,
 		Ciphertext: value,
 	}
 

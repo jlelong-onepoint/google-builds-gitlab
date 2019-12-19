@@ -1,12 +1,5 @@
 
-# Deploy old
 
-Create a bucket to store cloud build -> jarviews-cloudbuild
-
-Create a deploy token in gitlab for repository :
-- Settings > Repository > Deploy Tokens
-
-Put the token in a file -> deploykey.txt. Caution to don't add an endline char at the end of the file
 
 Cypher the deploy token with a gcloud kms key and deploy the function :
 
@@ -57,8 +50,13 @@ gcloud functions deploy GitHookHandler \
   --service-account=gitlab-hook@wired-balm-258119.iam.gserviceaccount.com \
   --runtime go111 --trigger-http --region=europe-west1 --env-vars-file env.yaml
 
-# Undeploy
+# Configure a gitlab repository
 
+Create a deploy token in gitlab for repository :
+- Settings > Repository > Deploy Tokens
+
+
+# Undeploy
 
 - Bucket can only be deleted when they are empty
 - Cloud KMS KeyRings and CryptoKeys cannot be deleted, so you need to abandon the resources.
@@ -87,18 +85,13 @@ curl -X POST localhost:8081/config -H "Content-Type:application/json" -d '{"proj
 # TODO:
 
 - Better README ^
-- Username of deploy_token is hardcoded
+- Output to deploy for serviceAccount name and needed informations
 - template of env.yaml
-- Use service account instead of appspot account
-- Automatically remove endl from gitlab token
 - Better error management
-- Bucket name as environement variables
-- Tgz filen^ame with a timestamp or a uniq id (commit id ?)
+  - use panic for error ?? : cf https://github.com/GoogleCloudPlatform/golang-samples/blob/master/functions/tips/error.go ??
+- Tgz filename with a timestamp or a uniq id (commit id ?)
 - Don't tar .git folder
-- use panic for error : cf https://github.com/GoogleCloudPlatform/golang-samples/blob/master/functions/tips/error.go ??
 - runtimeconfig.admin role only on the gitlabhook config object not at the project level
-
-
 
 
 gcloud kms keys add-iam-policy-binding gitlab --location=europe-west1 --keyring=secrets --member=serviceAccount:840720119725-compute@developer.gserviceaccount.com --role roles/cloudkms.cryptoKeyEncrypterDecrypter

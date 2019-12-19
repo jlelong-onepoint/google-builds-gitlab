@@ -3,7 +3,6 @@ package google_builds_gitlab
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -23,10 +22,8 @@ type addRepositoryConfigRequest struct {
 
 
 func GitHookConfigHandler(w http.ResponseWriter, r *http.Request) {
-
 	log.Print("Adding a gitlab configuration...")
 
-	// TODO : Switch to runtimeConfig object for configuration storage
 	// TODO : Check http verb
 	// TODO : Allow to delete a configuration
 	// TODO : Allow to update a configuration
@@ -37,7 +34,9 @@ func GitHookConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encryptedDeployToken, err := pkg.Encrypt(GetKeyName(), configRequest.DeployToken)
+	cypherService := pkg.NewCypherService(os.Getenv("GCP_PROJECT"), os.Getenv("REGION"), keyRingName, os.Getenv("DEPLOYMENT_NAME"))
+
+	encryptedDeployToken, err := cypherService.Encrypt(configRequest.DeployToken)
 	if err != nil {
 		panic(err)
 	}
@@ -52,14 +51,6 @@ func GitHookConfigHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
-}
-
-// "projects/wired-balm-258119/locations/europe-west1/keyRings/google-builds-gitlab/cryptoKeys/gitlab"
-func GetKeyName() string {
-	return fmt.Sprintf("projects/%v/locations/%v/keyRings/%v/cryptoKeys/%v",
-		os.Getenv("GCP_PROJECT"), os.Getenv("REGION"), keyRingName, os.Getenv("DEPLOYMENT_NAME"))
-
 }
 
 func extractConfigRequest(reader io.Reader) (addRepositoryConfigRequest, error) {
