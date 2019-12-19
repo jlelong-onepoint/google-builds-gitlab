@@ -1,4 +1,4 @@
-package google_builds_gitlab
+package pkg
 
 import (
 	"archive/tar"
@@ -11,7 +11,7 @@ import (
 )
 
 // Tar takes a source and variable writers and walks 'source' writing each file found to the tar writer;
-func tarFolder(src string, writer io.Writer) error {
+func TarFolder(src string, writer io.Writer) error {
 
 	// ensure the src actually exists before trying to tar it
 	if _, err := os.Stat(src); err != nil {

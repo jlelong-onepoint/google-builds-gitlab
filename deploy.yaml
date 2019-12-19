@@ -1,0 +1,12 @@
+imports:
+  - path: deployments/deploy.py
+
+resources:
+  - name: gitlab-hook
+    type: deployments/deploy.py
+    properties:
+      region: europe-west1
+
+
+
+
