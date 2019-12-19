@@ -42,6 +42,7 @@ def GenerateConfig(context):
     'name': context.env['deployment'], # The name of the deployment is the name of the bucket. Unless, accessControl failed
     'type': 'storage.v1.bucket',
     'properties': {
+      'name': context.env['deployment'],
       'location': context.properties['region'],
     },
     'accessControl': {
