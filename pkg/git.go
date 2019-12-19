@@ -12,7 +12,7 @@ func Checkout(gitUrl string, checkoutDirectory string, username string, password
 	
 	git, err := git.PlainClone(checkoutDirectory, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
-			Username: "gitlab+deploy-token-67",
+			Username: username,
 			Password: password,
 		},
 		URL: gitUrl,
