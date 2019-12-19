@@ -53,7 +53,11 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("Checkout sources")
-	pkg.Checkout(pushHook.Project.HttpUrl, pushHook.CommitSha1, checkoutFolder, repositoryConfig.Username, *deployToken)
+	err = pkg.Checkout(pushHook.Project.HttpUrl, pushHook.CommitSha1, checkoutFolder, repositoryConfig.Username, *deployToken)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unable to checkout sources: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	fmt.Println("Tgz sources to bucket")
 	bucketName := os.Getenv("GCP_PROJECT") + "_" + os.Getenv("DEPLOYMENT_NAME")
@@ -100,6 +104,9 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Unable to submit builds : %v", err), http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println("Delete checkout folder") // Unless if session is reused, checkout failed
+	os.RemoveAll(checkoutFolder)
 
 	fmt.Println("Done")
 

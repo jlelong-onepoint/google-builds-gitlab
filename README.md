@@ -64,7 +64,7 @@ Create a webhooks in gitlab for push notification filling GitHookHandler functio
 Call configuration function with git token informations. git_project_id can be retrieve under menu Settings/general
 
 ```shell script
-curl -X POST <function-config-url>/config -H "Content-Type:application/json" \
+curl -X POST <function-config-url> -H "Content-Type:application/json" \
   -d '{"project_id":<git_projet_id>,"username":"<deploy_token_username>", "deploy_token":"<deploy_token>"}'
 ```
 
@@ -97,16 +97,14 @@ go build && \
 
 Start a hook :
 ```shell script
-curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id":2333, "project" : { "http_url":"https://gitlab.groupeonepoint.com/cds-bdx/aventure/jarviews/repository-index-reader.git"}}'
+curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id":2333, "after":"99d54b9c1c29e20798cc4d45ceb1bfc47bd0d70b", "project" : { "git_http_url":"https://gitlab.groupeonepoint.com/cds-bdx/aventure/jarviews/repository-index-reader.git"}}'
 ```
 
 # TODO:
 
-- Checkout gitref based on hook informations
 - Add deploy output for serviceAccount name and needed informations for subsequent commands
 - Better error management
   - use panic for error ?? : cf https://github.com/GoogleCloudPlatform/golang-samples/blob/master/functions/tips/error.go ??
-- Tgz filename with a timestamp or a uniq id (commit id ?)
 - Don't tar .git folder
 - runtimeconfig.admin role only on the gitlabhook config object not at the project level
 - add authorization by deployment, not via command line
@@ -114,3 +112,4 @@ curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id"
 - Add error when a hook is received on a projet without configuration
 - Allow to have project from multiple gitlab (avoid project_id clash)
 - Add a secret token from gitlab
+- Add autorization on bucket to allow project owner to view bucket

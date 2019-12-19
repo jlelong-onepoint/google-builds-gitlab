@@ -9,7 +9,7 @@ import (
 
 
 func Checkout(gitUrl string, sha1 string, checkoutDirectory string, username string, password string) error {
-	fmt.Printf("Checkout: %v ==> %v",gitUrl, checkoutDirectory)
+	fmt.Println("Checkout: %v ==> %v",gitUrl, checkoutDirectory)
 	
 	repo, err := git.PlainClone(checkoutDirectory, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
