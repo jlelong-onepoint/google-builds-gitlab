@@ -49,7 +49,7 @@ def GenerateConfig(context):
       'gcpIamPolicy': {
         'bindings': [
           {
-            'role': 'roles/storage.admin', # TODO : Change when we using runtime config instead of config file
+            'role': 'roles/storage.admin', # TODO : Reduce role, not sure this is always needed
             'members': [ 'serviceAccount:$(ref.serviceAccount.email)' ]
           }
         ]

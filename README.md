@@ -9,7 +9,7 @@ export REGION=europe-west1
 export SA_EMAIL=$DEPLOYMENT_NAME@$GCP_PROJECT.iam.gserviceaccount.com
 ```
 
-Enable needed services in the projet :
+Enable needed services in the project :
 ```shell script
 gcloud services enable runtimeconfig.googleapis.com
 gcloud services enable deploymentmanager.googleapis.com
@@ -111,3 +111,6 @@ curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id"
 - runtimeconfig.admin role only on the gitlabhook config object not at the project level
 - add authorization by deployment, not via command line
 - Move the region to runtimeconfig at deployment time and remove the env.yaml file
+- Add error when a hook is received on a projet without configuration
+- Allow to have project from multiple gitlab (avoid project_id clash)
+- Add a secret token from gitlab

@@ -21,12 +21,13 @@ const (
 
 type gitlabPushHook struct {
 	ObjectKind string `json:"object_kind"`
+	CommitSha1 string `json:"after"`
 	ProjectId uint `json:"project_id"`
 	Project project `json:"project"`
 }
 
 type project struct {
-	HttpUrl string `json:"http_url"`
+	HttpUrl string `json:"git_http_url"`
 }
 
 func GitHookHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,16 +53,17 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("Checkout sources")
-	pkg.Checkout(pushHook.Project.HttpUrl, checkoutFolder, repositoryConfig.Username, *deployToken)
+	pkg.Checkout(pushHook.Project.HttpUrl, pushHook.CommitSha1, checkoutFolder, repositoryConfig.Username, *deployToken)
 
 	fmt.Println("Tgz sources to bucket")
 	bucketName := os.Getenv("GCP_PROJECT") + "_" + os.Getenv("DEPLOYMENT_NAME")
-	err = sourceToBucket(bucketName)
+	tgzName := fmt.Sprintf("source-%d-%s.tgz", pushHook.ProjectId, pushHook.CommitSha1)
+
+	err = sourceToBucket(bucketName, tgzName)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Unable to store source in bucket: %v", err), http.StatusInternalServerError)
 		return
 	}
-
 
 	fmt.Println("Read cloud build definition and prepare build object")
 	cloudbuildYaml, err := ioutil.ReadFile(cloudBuildYaml)
@@ -76,10 +78,11 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Unable to parse cloud build definition : %v", err), http.StatusInternalServerError)
 		return
 	}
+
 	build.Source = &cloudbuild.Source{
 		StorageSource: &cloudbuild.StorageSource{
 			Bucket: bucketName,
-			Object: "source.tgz",
+			Object: tgzName,
 		},
 	}
 
@@ -103,7 +106,7 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func sourceToBucket(bucketName string) (err error){
+func sourceToBucket(bucketName string, objectName string) (err error){
 	ctx := context.Background()
 
 	client, err := storage.NewClient(ctx)
@@ -111,7 +114,7 @@ func sourceToBucket(bucketName string) (err error){
 		return err
 	}
 
-	writer := client.Bucket(bucketName).Object("source.tgz").NewWriter(ctx)
+	writer := client.Bucket(bucketName).Object(objectName).NewWriter(ctx)
 	defer func() {
 		err = writer.Close()
 	}()

@@ -3,14 +3,15 @@ package pkg
 import (
 	"fmt"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
 
-func Checkout(gitUrl string, checkoutDirectory string, username string, password string) error {
+func Checkout(gitUrl string, sha1 string, checkoutDirectory string, username string, password string) error {
 	fmt.Printf("Checkout: %v ==> %v",gitUrl, checkoutDirectory)
 	
-	git, err := git.PlainClone(checkoutDirectory, false, &git.CloneOptions{
+	repo, err := git.PlainClone(checkoutDirectory, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
 			Username: username,
 			Password: password,
@@ -20,15 +21,22 @@ func Checkout(gitUrl string, checkoutDirectory string, username string, password
 	if err != nil {
 		return err
 	}
+	
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
 
-	// ... retrieving the branch being pointed by HEAD
-	ref, err := git.Head()
+	hash := plumbing.NewHash(sha1)
+	err = workTree.Checkout(&git.CheckoutOptions{
+		Hash: hash,
+	})
 	if err != nil {
 		return err
 	}
 	
-	// ... retrieving the commit object
-	if commit, err := git.CommitObject(ref.Hash()); err != nil {
+	// ... retrieving the commit object to log informations
+	if commit, err := repo.CommitObject(hash); err != nil {
 		return err
 	} else {
 		fmt.Print(commit)
