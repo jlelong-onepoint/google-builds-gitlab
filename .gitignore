@@ -1,4 +1,4 @@
 .idea
 cmd/cmd
-cmd/deploykey.*
+deploykey.txt
 env.yaml

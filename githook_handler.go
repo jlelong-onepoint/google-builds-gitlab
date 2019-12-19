@@ -55,7 +55,7 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	pkg.Checkout(pushHook.Project.HttpUrl, checkoutFolder, repositoryConfig.Username, *deployToken)
 
 	fmt.Println("Tgz sources to bucket")
-	bucketName := os.Getenv("DEPLOYMENT_NAME")
+	bucketName := os.Getenv("GCP_PROJECT") + "_" + os.Getenv("DEPLOYMENT_NAME")
 	err = sourceToBucket(bucketName)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Unable to store source in bucket: %v", err), http.StatusInternalServerError)
