@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 	"google.golang.org/api/cloudbuild/v1"
 	"io/ioutil"
 	"net/http"
@@ -40,34 +41,20 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositoryConfig, err := pkg.NewConfigurationService(os.Getenv("GCP_PROJECT"), os.Getenv("DEPLOYMENT_NAME")).ReadConfig(pushHook.ProjectId)
-	if err != nil {
-		panic(err)
-	}
+	repositoryConfig := pkg.NewConfigurationService(os.Getenv("GCP_PROJECT"), os.Getenv("DEPLOYMENT_NAME")).ReadConfig(pushHook.ProjectId)
 
 	cypherService := pkg.NewCypherService(os.Getenv("GCP_PROJECT"), os.Getenv("REGION"), keyRingName, os.Getenv("DEPLOYMENT_NAME"))
 
-	deployToken, err := cypherService.Decrypt(repositoryConfig.EncryptedDeployToken)
-	if err != nil {
-		panic(err)
-	}
+	deployToken := cypherService.Decrypt(repositoryConfig.EncryptedDeployToken)
 
 	fmt.Println("Checkout sources")
-	err = pkg.Checkout(pushHook.Project.HttpUrl, pushHook.CommitSha1, checkoutFolder, repositoryConfig.Username, *deployToken)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unable to checkout sources: %v", err), http.StatusInternalServerError)
-		return
-	}
+	pkg.Checkout(pushHook.Project.HttpUrl, pushHook.CommitSha1, checkoutFolder, repositoryConfig.Username, deployToken)
 
 	fmt.Println("Tgz sources to bucket")
 	bucketName := os.Getenv("GCP_PROJECT") + "_" + os.Getenv("DEPLOYMENT_NAME")
 	tgzName := fmt.Sprintf("source-%d-%s.tgz", pushHook.ProjectId, pushHook.CommitSha1)
 
-	err = sourceToBucket(bucketName, tgzName)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unable to store source in bucket: %v", err), http.StatusInternalServerError)
-		return
-	}
+	sourceToBucket(bucketName, tgzName)
 
 	fmt.Println("Read cloud build definition and prepare build object")
 	cloudbuildYaml, err := ioutil.ReadFile(cloudBuildYaml)
@@ -79,7 +66,7 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	var build cloudbuild.Build
 	err = yaml.Unmarshal(cloudbuildYaml, &build)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unable to parse cloud build definition : %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Unable to parse cloud build definition : %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -93,42 +80,42 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Submits builds")
 	cloudbuildService, err := cloudbuild.NewService(context.Background())
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unable to create cloud build service : %v", err), http.StatusInternalServerError)
-		return
+		panic(err)
 	}
 
 	projectBuildService := cloudbuild.NewProjectsBuildsService(cloudbuildService)
 	createCall := projectBuildService.Create(os.Getenv("GCP_PROJECT"), &build)
 	_, err = createCall.Do()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unable to submit builds : %v", err), http.StatusInternalServerError)
-		return
+		panic(errors.Wrapf(err,"Unable to create build from bucket %v and object %v", bucketName, tgzName))
 	}
 
 	fmt.Println("Delete checkout folder") // Unless if session is reused, checkout failed
-	os.RemoveAll(checkoutFolder)
+	if err := os.RemoveAll(checkoutFolder); err != nil {
+		panic(errors.Wrapf(err, "Unable to delete folder %v", checkoutFolder))
+	}
 
 	fmt.Println("Done")
 
 }
 
 
-func sourceToBucket(bucketName string, objectName string) (err error){
+func sourceToBucket(bucketName string, objectName string) {
 	ctx := context.Background()
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	writer := client.Bucket(bucketName).Object(objectName).NewWriter(ctx)
 	defer func() {
-		err = writer.Close()
+		if ferr := writer.Close(); ferr != nil {
+			panic(errors.Wrapf(ferr, "Unable to store source in bucket: %v", bucketName))
+		}
 	}()
 
 	pkg.TarFolder(checkoutFolder, writer, ".git", ".gitignore")
-
-	return nil
 }
 
 

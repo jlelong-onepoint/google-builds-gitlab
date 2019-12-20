@@ -2,14 +2,15 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
 
-func Checkout(gitUrl string, sha1 string, checkoutDirectory string, username string, password string) error {
-	fmt.Println("Checkout: %v ==> %v",gitUrl, checkoutDirectory)
+func Checkout(gitUrl string, sha1 string, checkoutDirectory string, username string, password string) {
+	fmt.Printf("Checkout: %v ==> %v\n",gitUrl, checkoutDirectory)
 	
 	repo, err := git.PlainClone(checkoutDirectory, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
@@ -19,12 +20,12 @@ func Checkout(gitUrl string, sha1 string, checkoutDirectory string, username str
 		URL: gitUrl,
 	})
 	if err != nil {
-		return err
+		panic(err)
 	}
 	
 	workTree, err := repo.Worktree()
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	hash := plumbing.NewHash(sha1)
@@ -32,17 +33,15 @@ func Checkout(gitUrl string, sha1 string, checkoutDirectory string, username str
 		Hash: hash,
 	})
 	if err != nil {
-		return err
+		panic(errors.Wrapf(err, "Unable to checkout sha %v", sha1))
 	}
 	
 	// ... retrieving the commit object to log informations
 	if commit, err := repo.CommitObject(hash); err != nil {
-		return err
+		panic(err)
 	} else {
-		fmt.Print(commit)
+		fmt.Println(commit)
 	}
-
-	return nil
 }
 
 

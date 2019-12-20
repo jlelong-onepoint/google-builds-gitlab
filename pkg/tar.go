@@ -3,7 +3,7 @@ package pkg
 import (
 	"archive/tar"
 	"compress/gzip"
-	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,11 +11,11 @@ import (
 )
 
 // Tar takes a source and variable writers and walks 'source' writing each file found to the tar writer;
-func TarFolder(src string, writer io.Writer, skips ...string) error {
+func TarFolder(src string, writer io.Writer, skips ...string) {
 
 	// ensure the src actually exists before trying to tar it
 	if _, err := os.Stat(src); err != nil {
-		return fmt.Errorf("Unable to tar files - %v", err.Error())
+		panic(errors.Wrapf(err, "Unable to tar src : %v", src))
 	}
 
 	gzw := gzip.NewWriter(writer)
@@ -25,7 +25,7 @@ func TarFolder(src string, writer io.Writer, skips ...string) error {
 	defer tw.Close()
 
 	// walk path
-	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
+	err := filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
 
 		// return on any error
 		if err != nil {
@@ -77,6 +77,10 @@ func TarFolder(src string, writer io.Writer, skips ...string) error {
 
 		return nil
 	})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func contains(arr []string, str string) bool {

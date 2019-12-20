@@ -79,6 +79,8 @@ gcloud deployment-manager deployments delete $DEPLOYMENT_NAME
 gcloud deployment-manager deployments delete $DEPLOYMENT_NAME --delete-policy=abandon
 gcloud projects remove-iam-policy-binding $GCP_PROJECT \
   --member serviceAccount:$GCP_PROJECT_NUMBER@cloudservices.gserviceaccount.com --role roles/storage.admin
+gcloud functions delete GitHookConfigHandler --region=$REGION
+gcloud functions delete GitHookHandler --region=$REGION
 ``` 
 
 # Environement variables to run/debug locally 
@@ -103,8 +105,6 @@ curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id"
 # TODO:
 
 - Add deploy output for serviceAccount name and needed informations for subsequent commands
-- Better error management
-  - use panic for error ?? : cf https://github.com/GoogleCloudPlatform/golang-samples/blob/master/functions/tips/error.go ??
 - runtimeconfig.admin role only on the gitlabhook config object not at the project level
 - add authorization by deployment, not via command line
 - Move the region to runtimeconfig at deployment time and remove the env.yaml file
@@ -112,3 +112,6 @@ curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id"
 - Allow to have project from multiple gitlab (avoid project_id clash)
 - Add a secret token from gitlab
 - Add autorization on bucket to allow project owner to view bucket
+- Move pkg to internal and move every file in it's own package ?
+- Init client only in init method : https://cloud.google.com/functions/docs/concepts/go-runtime
+- In Decrypt/Encrypt mutualize google service creation

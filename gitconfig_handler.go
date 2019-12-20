@@ -3,8 +3,8 @@ package google_builds_gitlab
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"peekmoon.org/google-builds-gitlab/pkg"
@@ -22,7 +22,7 @@ type addRepositoryConfigRequest struct {
 
 
 func GitHookConfigHandler(w http.ResponseWriter, r *http.Request) {
-	log.Print("Adding a gitlab configuration...")
+	fmt.Println("Adding a gitlab configuration...")
 
 	// TODO : Check http verb
 	// TODO : Allow to delete a configuration
@@ -36,10 +36,7 @@ func GitHookConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	cypherService := pkg.NewCypherService(os.Getenv("GCP_PROJECT"), os.Getenv("REGION"), keyRingName, os.Getenv("DEPLOYMENT_NAME"))
 
-	encryptedDeployToken, err := cypherService.Encrypt(configRequest.DeployToken)
-	if err != nil {
-		panic(err)
-	}
+	encryptedDeployToken := cypherService.Encrypt(configRequest.DeployToken)
 
 	config := pkg.RepositoryConfig{
 		GitProjectId:         *configRequest.ProjectId,
@@ -47,10 +44,7 @@ func GitHookConfigHandler(w http.ResponseWriter, r *http.Request) {
 		EncryptedDeployToken: encryptedDeployToken,
 	}
 
-	err = pkg.NewConfigurationService(os.Getenv("GCP_PROJECT"), os.Getenv("DEPLOYMENT_NAME")).StoreConfig(config)
-	if err != nil {
-		panic(err)
-	}
+	pkg.NewConfigurationService(os.Getenv("GCP_PROJECT"), os.Getenv("DEPLOYMENT_NAME")).StoreConfig(config)
 }
 
 func extractConfigRequest(reader io.Reader) (addRepositoryConfigRequest, error) {

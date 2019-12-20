@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"google.golang.org/api/runtimeconfig/v1beta1"
-	"log"
 )
 
 type ConfigurationService struct {
@@ -26,14 +26,14 @@ func NewConfigurationService(projectId string, configName string) *Configuration
 }
 
 
-func (service ConfigurationService) ReadConfig(projectId uint) (*RepositoryConfig, error) {
-	log.Printf("Retriving configuration for project %v", projectId)
+func (service ConfigurationService) ReadConfig(projectId uint) RepositoryConfig {
+	fmt.Printf("Retriving configuration for project %v\n", projectId)
 
 	ctx := context.Background()
 
 	runtimeConfigService, err := runtimeconfig.NewService(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("runtimeconfig.NewService: %v", err)
+		panic(err)
 	}
 
 	variableName := fmt.Sprintf("%v/variables/%d", service.configName, projectId)
@@ -41,34 +41,32 @@ func (service ConfigurationService) ReadConfig(projectId uint) (*RepositoryConfi
 
 	variable, err := getVariable.Do()
 	if err != nil {
-		return nil, err
+		panic(errors.Wrapf(err, "Unable to get Variable : %v", variableName))
 	}
 
 	var config RepositoryConfig
 	err = json.Unmarshal([]byte(variable.Text), &config)
 	if  err != nil {
-		return nil,err
+		panic(errors.Wrapf(err, "Unable to unmarshal configuration : %v", variable.Text))
 	}
 
-	log.Printf("Config read : %W", config)
-
-	return &config, nil
+	return config
 }
 
 
-func (service ConfigurationService) StoreConfig(config RepositoryConfig) (err error) {
-	log.Printf("Storing configuration for project %v", config.GitProjectId)
+func (service ConfigurationService) StoreConfig(config RepositoryConfig) {
+	fmt.Printf("Storing configuration for project %v\n", config.GitProjectId)
 
 	ctx := context.Background()
 
 	runtimeConfigService, err := runtimeconfig.NewService(ctx)
 	if err != nil {
-		return fmt.Errorf("runtimeconfig.NewService: %v", err)
+		panic(err)
 	}
 
 	text, err := json.Marshal(config)
 	if  err != nil {
-		return err
+		panic(err)
 	}
 
 	variableName := fmt.Sprintf("%v/variables/%d", service.configName, config.GitProjectId)
@@ -77,14 +75,12 @@ func (service ConfigurationService) StoreConfig(config RepositoryConfig) (err er
 		Text: string(text),
 	} )
 
-	variable, err := createVariable.Do()
+	_, err = createVariable.Do()
 	if err != nil {
-		return err
+		panic(errors.Wrapf(err, "Unable to store config : %s <== %s", variableName, string(text)))
 	}
 
-	log.Printf("Variable create : %W", variable)
-
-	return err
+	fmt.Printf("Variable created : %v\n", variableName)
 }
 
 

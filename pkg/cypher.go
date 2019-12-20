@@ -4,6 +4,7 @@ import (
 	cloudkms "cloud.google.com/go/kms/apiv1"
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 
@@ -18,12 +19,12 @@ func NewCypherService(projectId string, region string, keyRingName string, keyNa
 }
 
 
-func (service CypherService) Encrypt(value string) ([]byte, error) {
+func (service CypherService) Encrypt(value string) []byte {
 	ctx := context.Background()
 
 	client, err := cloudkms.NewKeyManagementClient(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("cloudkms.NewKeyManagementClient: %v", err)
+		panic(err)
 	}
 	defer client.Close()
 
@@ -35,17 +36,17 @@ func (service CypherService) Encrypt(value string) ([]byte, error) {
 	// Call the API.
 	resp, err := client.Encrypt(ctx, &req)
 	if err != nil {
-		return nil, fmt.Errorf("Encrypt: %v", err)
+		panic(errors.Wrapf(err, "Unable to encrypt token with key %v", service.keyName))
 	}
 
-	return resp.Ciphertext, nil
+	return resp.Ciphertext
 }
 
-func (service CypherService) Decrypt(value []byte) (*string, error) {
+func (service CypherService) Decrypt(value []byte) string {
 	ctx := context.Background()
 	client, err := cloudkms.NewKeyManagementClient(ctx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	defer client.Close()
 
@@ -59,10 +60,10 @@ func (service CypherService) Decrypt(value []byte) (*string, error) {
 	// Call the API.
 	resp, err := client.Decrypt(ctx, &req)
 	if err != nil {
-		return nil, err
+		panic(errors.Wrapf(err, "Unable to decrypt token with key %v", service.keyName))
 	}
 
 	result := string(resp.Plaintext)
 
-	return &result, nil
+	return result
 }
