@@ -44,6 +44,7 @@ def GenerateConfig(context):
     'properties': {
       'name': context.env['project'] + '_' + context.env['deployment'],
       'location': context.properties['region'],
+      'predefinedAcl': 'projectPrivate'
     },
     'accessControl': {
       'gcpIamPolicy': {

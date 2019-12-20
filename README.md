@@ -111,7 +111,6 @@ curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id"
 - Add error when a hook is received on a projet without configuration
 - Allow to have project from multiple gitlab (avoid project_id clash)
 - Add a secret token from gitlab
-- Add autorization on bucket to allow project owner to view bucket
 - Move pkg to internal and move every file in it's own package ?
 - Init client only in init method : https://cloud.google.com/functions/docs/concepts/go-runtime
 - In Decrypt/Encrypt mutualize google service creation
