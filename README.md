@@ -53,11 +53,11 @@ Deploy githook functions (No easy way to deploy a function using google deployme
 ```shell script
 gcloud functions deploy GitHookConfigHandler \
   --service-account=$SA_EMAIL \
-  --runtime go111 --trigger-http --region=$REGION --env-vars-file env.yaml
+  --runtime go111 --trigger-http --region=$REGION --set-env-vars=DEPLOYMENT_NAME=$DEPLOYMENT_NAME,REGION=$REGION
   
 gcloud functions deploy GitHookHandler \
   --service-account=$SA_EMAIL \
-  --runtime go111 --trigger-http --region=$REGION --env-vars-file env.yaml
+  --runtime go111 --trigger-http --region=$REGION --set-env-vars=DEPLOYMENT_NAME=$DEPLOYMENT_NAME,REGION=$REGION
 ```
 
 # Configure a gitlab repository
@@ -65,7 +65,7 @@ gcloud functions deploy GitHookHandler \
 Create a deploy token in gitlab for repository :
 - Settings > Repository > Deploy Tokens
 
-Create a webhooks in gitlab for push notification filling GitHookHandler function url
+Create a webhooks in gitlab for push notification filling GitHookHandler function url.
 
 Call configuration function with git token informations. git_project_id can be retrieve under menu Settings/general
 
