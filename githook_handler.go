@@ -50,6 +50,13 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Checkout sources")
 	pkg.Checkout(pushHook.Project.HttpUrl, pushHook.CommitSha1, checkoutFolder, repositoryConfig.Username, deployToken)
 
+	defer func() {
+		fmt.Println("Delete checkout folder") // Unless if session is reused, checkout failed
+		if err := os.RemoveAll(checkoutFolder); err != nil {
+			panic(errors.Wrapf(err, "Unable to delete folder %v", checkoutFolder))
+		}
+	}()
+
 	fmt.Println("Tgz sources to bucket")
 	bucketName := os.Getenv("GCP_PROJECT") + "_" + os.Getenv("DEPLOYMENT_NAME")
 	tgzName := fmt.Sprintf("source-%d-%s.tgz", pushHook.ProjectId, pushHook.CommitSha1)
@@ -88,11 +95,6 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = createCall.Do()
 	if err != nil {
 		panic(errors.Wrapf(err,"Unable to create build from bucket %v and object %v", bucketName, tgzName))
-	}
-
-	fmt.Println("Delete checkout folder") // Unless if session is reused, checkout failed
-	if err := os.RemoveAll(checkoutFolder); err != nil {
-		panic(errors.Wrapf(err, "Unable to delete folder %v", checkoutFolder))
 	}
 
 	fmt.Println("Done")
