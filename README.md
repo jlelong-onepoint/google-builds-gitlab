@@ -108,12 +108,16 @@ Start a hook :
 curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id":2333, "after":"99d54b9c1c29e20798cc4d45ceb1bfc47bd0d70b", "project" : { "git_http_url":"https://gitlab.groupeonepoint.com/cds-bdx/aventure/jarviews/repository-index-reader.git"}}'
 ```
 
+# Projects expectation
+
+Your project is expected to have a `cloudbuild.yaml` at the root of your project.
+
+
 # TODO:
 
 - Add deploy output for serviceAccount name and needed informations for subsequent commands
 - runtimeconfig.admin role only on the gitlabhook config object not at the project level
 - add authorization by deployment, not via command line
-- Move the region to runtimeconfig at deployment time and remove the env.yaml file
 - Add error when a hook is received on a projet without configuration
 - Allow to have project from multiple gitlab (avoid project_id clash)
 - Add a secret token from gitlab
