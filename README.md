@@ -1,5 +1,11 @@
 # Deploy
 
+Set default gcp project : 
+
+```shell script
+gcloud config set project <PROJECT_NAME>
+```
+
 Set environment variables :
 ```shell script
 export GCP_PROJECT=$(gcloud config get-value project)
