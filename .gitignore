@@ -1,4 +1,3 @@
 .idea
 cmd/cmd
 deploykey.txt
-env.yaml

@@ -1,5 +1,7 @@
 # Deploy
 
+Commands to deploy in the current default projet. Billing must be activated on project.
+
 Set environment variables :
 ```shell script
 export GCP_PROJECT=$(gcloud config get-value project)
@@ -47,11 +49,12 @@ Deploy githook functions (No easy way to deploy a function using google deployme
 ```shell script
 gcloud functions deploy GitHookConfigHandler \
   --service-account=$SA_EMAIL \
-  --runtime go111 --trigger-http --region=$REGION --env-vars-file env.yaml
+  --runtime go111 --trigger-http --region=$REGION --set-env-vars=DEPLOYMENT_NAME=$DEPLOYMENT_NAME,REGION=$REGION
+
   
 gcloud functions deploy GitHookHandler \
   --service-account=$SA_EMAIL \
-  --runtime go111 --trigger-http --region=$REGION --env-vars-file env.yaml
+  --runtime go111 --trigger-http --region=$REGION --set-env-vars=DEPLOYMENT_NAME=$DEPLOYMENT_NAME,REGION=$REGION
 ```
 
 # Configure a gitlab repository
@@ -107,7 +110,7 @@ curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id"
 - Add deploy output for serviceAccount name and needed informations for subsequent commands
 - runtimeconfig.admin role only on the gitlabhook config object not at the project level
 - add authorization by deployment, not via command line
-- Move the region to runtimeconfig at deployment time and remove the env.yaml file
+- Move the region to runtimeconfig at deployment time
 - Add error when a hook is received on a projet without configuration
 - Allow to have project from multiple gitlab (avoid project_id clash)
 - Add a secret token from gitlab
