@@ -1,6 +1,11 @@
 # Deploy
 
-Commands to deploy in the current default projet. Billing must be activated on project.
+Commands deploy in the current default projet. Billing must be activated on project.
+Set default gcp project : 
+
+```shell script
+gcloud config set project <PROJECT_NAME>
+```
 
 Set environment variables :
 ```shell script
@@ -51,7 +56,6 @@ gcloud functions deploy GitHookConfigHandler \
   --service-account=$SA_EMAIL \
   --runtime go111 --trigger-http --region=$REGION --set-env-vars=DEPLOYMENT_NAME=$DEPLOYMENT_NAME,REGION=$REGION
 
-  
 gcloud functions deploy GitHookHandler \
   --service-account=$SA_EMAIL \
   --runtime go111 --trigger-http --region=$REGION --set-env-vars=DEPLOYMENT_NAME=$DEPLOYMENT_NAME,REGION=$REGION
@@ -62,7 +66,7 @@ gcloud functions deploy GitHookHandler \
 Create a deploy token in gitlab for repository :
 - Settings > Repository > Deploy Tokens
 
-Create a webhooks in gitlab for push notification filling GitHookHandler function url
+Create a webhooks in gitlab for push notification filling GitHookHandler function url.
 
 Call configuration function with git token informations. git_project_id can be retrieve under menu Settings/general
 
@@ -104,6 +108,11 @@ Start a hook :
 ```shell script
 curl -X POST localhost:8081 -H "Content-Type:application/json" -d '{"project_id":2333, "after":"99d54b9c1c29e20798cc4d45ceb1bfc47bd0d70b", "project" : { "git_http_url":"https://gitlab.groupeonepoint.com/cds-bdx/aventure/jarviews/repository-index-reader.git"}}'
 ```
+
+# Projects expectation
+
+Your project is expected to have a `cloudbuild.yaml` at the root of your project.
+
 
 # TODO:
 
