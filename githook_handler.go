@@ -66,15 +66,13 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Read cloud build definition and prepare build object")
 	cloudbuildYaml, err := ioutil.ReadFile(cloudBuildYaml)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unable to read cloud build definition file: %v", err), http.StatusBadRequest)
-		return
+		errorExit(w,"unable to read cloud build definition file: %v", err)
 	}
 
 	var build cloudbuild.Build
 	err = yaml.Unmarshal(cloudbuildYaml, &build)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unable to parse cloud build definition : %v", err), http.StatusBadRequest)
-		return
+		errorExit(w,"unable to parse cloud build definition : %v", err)
 	}
 
 	build.Source = &cloudbuild.Source{
@@ -101,6 +99,13 @@ func GitHookHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+
+func errorExit(w http.ResponseWriter, template string, e error){
+	msg := fmt.Sprintf(template, e)
+	fmt.Println(msg)
+	http.Error(w, msg, http.StatusBadRequest)
+	panic(e)
+}
 
 func sourceToBucket(bucketName string, objectName string) {
 	ctx := context.Background()
